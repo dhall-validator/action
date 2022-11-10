@@ -27,6 +27,9 @@ inputs:
     description: 'Number of CPUs available for running checks'
     required: false
     default: '2'
+  retry-failed-files:
+    description: 'On fail retry serially (mostly for when parallel jobs run out of memory)'
+    required: false
   verbose:
     description: 'Enable verbose logging'
     default: ''
@@ -43,6 +46,7 @@ runs:
         FILES: ${{ inputs.dhall-files }}
         LIST: ${{ inputs.dhall-file-list }}
         PARALLEL_JOBS: ${{ inputs.parallel-jobs }}
+        RETRY_FAILED_FILES: ${{ inputs.retry-failed-files }}
         VERBOSE: ${{ inputs.verbose }}
       run:
         $GITHUB_ACTION_PATH/check.sh
