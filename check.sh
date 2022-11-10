@@ -18,18 +18,36 @@ fi
 if [ -z "$PARALLEL_JOBS" ]; then
   PARALLEL_JOBS=2
 fi
+
 cat $LIST |
-  xargs -0 "-P$PARALLEL_JOBS" -r -n1 $GITHUB_ACTION_PATH/dhall-checker
-(
-  cd $DHALL_FAILURES
-  files="$(find . -type f)"
+  xargs -0 "-P$PARALLEL_JOBS" -r -n1 $GITHUB_ACTION_PATH/dhall-checker 2>/dev/null
+
+if [ -n "$RETRY_FAILED_FILES" ]; then
+  files="$(cd $DHALL_FAILURES; find . -type f)"
   if [ -z "$files" ]; then
     exit 0
   fi
+
+  old_failures=$DHALL_FAILURES
+  DHALL_FAILURES=$(mktemp -d)
   echo
-  echo "Errors detected in:"
+  echo "Rechecking serially..."
+  echo
   for file in $files; do
-    cat $file
+    dhall_file=$(cat "$old_failures/$file")
+    (
+      $GITHUB_ACTION_PATH/dhall-checker $dhall_file
+    )
   done
-  exit 1
-)
+fi
+cd $DHALL_FAILURES
+files="$(find . -type f)"
+if [ -z "$files" ]; then
+  exit 0
+fi
+echo
+echo "Errors detected in:"
+for file in $files; do
+  cat $file
+done
+exit 1
