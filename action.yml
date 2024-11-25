@@ -1,9 +1,6 @@
 name: 'Dhall Validator'
 description: 'Validate Dhall files'
 author: 'jsoref'
-branding:
-  icon: 'edit-3'
-  color: 'blue'
 inputs:
   dhall-json-binary:
     description: 'Binary of dhall-json to use'
