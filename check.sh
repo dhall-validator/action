@@ -49,7 +49,7 @@ if [ -z "$LIST" ]; then
   export LIST=$(mktemp)
 fi
 if [ -n "$FILES" ]; then
-  echo "$FILES" | tr "\n" "\0" >> "$LIST"
+  echo "$FILES" | grep . | tr "\n" "\0" >> "$LIST"
 fi
 
 if ! grep -q . "$LIST"; then
