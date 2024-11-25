@@ -11,6 +11,7 @@ jobs:
   validate-files:
     name: Validate Files
     runs-on: ubuntu-latest
+    continue-on-error: true
     permissions:
       contents: read
     steps:
@@ -36,6 +37,7 @@ jobs:
   validate-list:
     name: Validate List
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
     - name: checkout-merge
       if: "contains(github.event_name, 'pull_request')"
@@ -70,7 +72,7 @@ jobs:
     if: success() || failure()
     steps:
     - name: Check for failing to catch validation errors
-      if: needs.validate-files.result == 'success' || needs.validate-list.result == 'success'
+      if: needs.validate-files.outcome == 'success' || needs.validate-list.outcome == 'success'
       run: |
         echo "::error::Failed to catch validation errors"
         exit 1
