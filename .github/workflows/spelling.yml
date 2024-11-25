@@ -32,6 +32,9 @@ jobs:
         checkout: true
         spell_check_this: check-spelling/spell-check-this@prerelease
         post_comment: 0
+        extra_dictionaries:
+          cspell:software-terms/dict/softwareTerms.txt
+          cspell:python/src/python/python-lib.txt
 
   comment:
     name: Report
