@@ -10,19 +10,19 @@ on:
 jobs:
   validate-files:
     name: Validate Files
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     continue-on-error: true
     permissions:
       contents: read
     steps:
     - name: checkout-merge
       if: "contains(github.event_name, 'pull_request')"
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         ref: refs/pull/${{github.event.pull_request.number}}/merge
     - name: checkout
       if: "!contains(github.event_name, 'pull_request')"
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.head.sha }}
     - name: dhall-validator-files
@@ -36,21 +36,21 @@ jobs:
         verbose: 1
   validate-list:
     name: Validate List
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     continue-on-error: true
     steps:
     - name: checkout-merge
       if: "contains(github.event_name, 'pull_request')"
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         ref: refs/pull/${{github.event.pull_request.number}}/merge
     - name: checkout
       if: "!contains(github.event_name, 'pull_request')"
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.head.sha }}
     - name: get tests
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         repository: dhall-lang/dhall-lang
         path: dhall-lang
@@ -63,3 +63,19 @@ jobs:
       uses: ./
       with:
         dhall-file-list: /tmp/dhall-files.list
+  collect-results:
+    name: Collect Results
+    runs-on: ubuntu-latest
+    needs:
+      - validate-files
+      - validate-list
+    if: success() || failure()
+    steps:
+    - name: Check for failing to catch validation errors
+      if: needs.validate-files.outcome == 'success' || needs.validate-list.outcome == 'success'
+      run: |
+        echo "::error::Failed to catch validation errors"
+        exit 1
+    - name: Report success
+      run: |
+        echo "::notice::Validation properly caught errors"
