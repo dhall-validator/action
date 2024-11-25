@@ -1,11 +1,8 @@
 dhall
-elsif
+endgroup
+github
 haskell
 jsoref
-mktemp
-perl
+Linting
+linux
 pne
-pwd
-undef
-xargs
-yaml
