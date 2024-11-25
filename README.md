@@ -1,6 +1,6 @@
 # dhall-validator/action
 
-This action uses [dhall-to-json](https://github.com/dhall-lang/dhall-haskell/tree/master/dhall-json) to validate dhall files.
+This action uses [dhall](https://github.com/dhall-lang/dhall-haskell/tree/main/dhall) to lint and [dhall-to-json](https://github.com/dhall-lang/dhall-haskell/tree/main/dhall-json) to validate dhall files.
 
 ## Background
 
