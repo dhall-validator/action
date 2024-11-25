@@ -8,24 +8,54 @@ on:
   pull_request_target:
 
 jobs:
-  validate-files:
-    name: Validate Files
+  good-file:
+    name: Validate Good File
     runs-on: ubuntu-latest
-    continue-on-error: true
     permissions:
       contents: read
+    outputs:
+      validated: ${{ steps.validate.outcome }}
+      expected: success
     steps:
     - name: checkout-merge
-      if: "contains(github.event_name, 'pull_request')"
+      if: contains(github.event_name, 'pull_request')
       uses: actions/checkout@v4
       with:
         ref: refs/pull/${{github.event.pull_request.number}}/merge
     - name: checkout
-      if: "!contains(github.event_name, 'pull_request')"
+      if: ${{ !contains(github.event_name, 'pull_request') }}
       uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.head.sha }}
     - name: dhall-validator-files
+      id: validate
+      continue-on-error: true
+      uses: ./
+      with:
+        dhall-files: tests/pass.dhall
+        verbose: 1
+  validate-files:
+    name: Validate Files
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      validated: ${{ steps.validate.outcome }}
+      expected: failure
+    steps:
+    - name: checkout-merge
+      if: contains(github.event_name, 'pull_request')
+      uses: actions/checkout@v4
+      with:
+        ref: refs/pull/${{github.event.pull_request.number}}/merge
+    - name: checkout
+      if: ${{ !contains(github.event_name, 'pull_request') }}
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+    - name: dhall-validator-files
+      id: validate
+      continue-on-error: true
       uses: ./
       with:
         dhall-files: |
@@ -37,15 +67,17 @@ jobs:
   validate-list:
     name: Validate List
     runs-on: ubuntu-latest
-    continue-on-error: true
+    outputs:
+      validated: ${{ steps.validate.outcome }}
+      expected: failure
     steps:
     - name: checkout-merge
-      if: "contains(github.event_name, 'pull_request')"
+      if: contains(github.event_name, 'pull_request')
       uses: actions/checkout@v4
       with:
         ref: refs/pull/${{github.event.pull_request.number}}/merge
     - name: checkout
-      if: "!contains(github.event_name, 'pull_request')"
+      if: ${{ !contains(github.event_name, 'pull_request') }}
       uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.head.sha }}
@@ -60,22 +92,44 @@ jobs:
         git -C dhall-lang ls-files 'tests/parser/*/unit/Bool*.dhall' -z |
         perl -e '$/="\0"; while (<>) {s#^#dhall-lang/#; print}' > /tmp/dhall-files.list
     - name: dhall-validator-list
+      id: validate
+      continue-on-error: true
       uses: ./
       with:
         dhall-file-list: /tmp/dhall-files.list
-  collect-results:
-    name: Collect Results
+  check-results:
+    name: Check Results
     runs-on: ubuntu-latest
     needs:
+      - good-file
       - validate-files
       - validate-list
     if: success() || failure()
     steps:
-    - name: Check for failing to catch validation errors
-      if: needs.validate-files.outcome == 'success' || needs.validate-list.outcome == 'success'
+    - name: Report
+      env:
+        GOOD_ACTUAL: ${{ needs.good-file.outputs.validated }}
+        GOOD_EXPECTED: ${{ needs.good-file.outputs.expected }}
+        FILES_ACTUAL: ${{ needs.validate-files.outputs.validated }}
+        FILES_EXPECTED: ${{ needs.validate-files.outputs.expected }}
+        LIST_ACTUAL: ${{ needs.validate-list.outputs.validated }}
+        LIST_EXPECTED: ${{ needs.validate-list.outputs.expected }}
+        EXPECTED: ${{ needs.good-file.outputs.validated == needs.good-file.outputs.expected && needs.validate-files.outputs.validated == needs.validate-files.outputs.expected && needs.validate-list.outputs.validated == needs.validate-list.outputs.expected }}
       run: |
-        echo "::error::Failed to catch validation errors"
-        exit 1
-    - name: Report success
-      run: |
-        echo "::notice::Validation properly caught errors"
+        : Check for failing to catch validation errors
+        github_results_to_emoji() {
+          perl -pe 's/success/:white_check_mark:/g;s/failure/:x:/g'
+        }
+        (
+          echo '# Results'
+          echo 'Test|Result|Expected'
+          echo '-|-|-'
+          echo "Good Files|$GOOD_ACTUAL|$GOOD_EXPECTED"
+          echo "Files|$FILES_ACTUAL|$FILES_EXPECTED"
+          echo "File List|$LIST_ACTUAL|$LIST_EXPECTED"
+        ) | github_results_to_emoji >> "$GITHUB_STEP_SUMMARY"
+        if [ "$EXPECTED" != true ]; then
+          echo "::error::Failed to properly perform validation"
+          exit 1
+        fi
+        echo "::notice::Validation properly handled good and bad cases"
