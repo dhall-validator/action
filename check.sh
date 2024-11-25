@@ -1,10 +1,19 @@
 #!/bin/sh -e
 
-dhall_haskell="$(eval echo "$DHALL_BINARY")"
-archive=$(mktemp)
-curl -Lsf "$dhall_haskell" -o "$archive"
-tar -xjf "$archive"
-PATH="$(pwd)/bin:$PATH"
+dhall_json="$(eval echo "$DHALL_JSON_BINARY")"
+dhall_haskell="$(eval echo "$DHALL_HASKELL_BINARY")"
+
+dhall_json_archive=$(mktemp)
+curl -Lsf "$dhall_json" -o "$dhall_json_archive"
+dhall_json_extracted=$(mktemp -d)
+tar -xjf "$dhall_json_archive" -C "$dhall_json_extracted"
+PATH="$dhall_json_extracted/bin:$PATH"
+
+dhall_haskell_archive=$(mktemp)
+curl -Lsf "$dhall_haskell" -o "$dhall_haskell_archive"
+dhall_haskell_extracted=$(mktemp -d)
+tar -xjf "$dhall_haskell_archive" -C "$dhall_haskell_extracted"
+PATH="$dhall_haskell_extracted/bin:$PATH"
 
 echo "::add-matcher::$GITHUB_ACTION_PATH/dhall-checker.json"
 
@@ -13,13 +22,24 @@ if [ -z "$LIST" ]; then
   export LIST=$(mktemp)
 fi
 if [ -n "$FILES" ]; then
-  echo "$FILES" | tr "\n" "\0" >> $LIST
+  echo "$FILES" | tr "\n" "\0" >> "$LIST"
 fi
 if [ -z "$PARALLEL_JOBS" ]; then
   PARALLEL_JOBS=2
 fi
 
-cat $LIST |
+if [ -n "$LINT" ]; then
+  echo "::group::lint"
+  if cat "$LIST" | xargs -0 dhall lint --check; then
+    echo '::notice::Linting passed.'
+  else
+    echo '::error::Linting failed. Use `dhall lint` locally to fix the errors.'
+    exit 1
+  fi
+  echo "::endgroup::"
+fi
+
+cat "$LIST" |
   xargs -0 "-P$PARALLEL_JOBS" -r -n1 $GITHUB_ACTION_PATH/dhall-checker 2>/dev/null
 
 if [ -n "$RETRY_FAILED_FILES" ]; then

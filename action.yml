@@ -5,17 +5,20 @@ branding:
   icon: 'edit-3'
   color: 'blue'
 inputs:
-  dhall-binary:
-    description: 'Binary of dhall-haskell to use'
+  dhall-json-binary:
+    description: 'Binary of dhall-json to use'
     default: 'https://github.com/dhall-lang/dhall-haskell/releases/download/$DHALL_HASKELL/dhall-json-$DHALL_JSON-x86_64-linux.tar.bz2'
     required: false
+  dhall-haskell-binary:
+    description: 'Binary of dhall to use'
+    default: 'https://github.com/dhall-lang/dhall-haskell/releases/download/$DHALL_HASKELL/dhall-$DHALL_HASKELL-x86_64-linux.tar.bz2'
   dhall-haskell:
     description: 'Version of dhall-haskell'
-    default: '1.39.0'
+    default: '1.42.0'
     required: false
   dhall-json:
     description: 'Version of dhall-to-json'
-    default: '1.7.7'
+    default: '1.7.12'
     required: false
   dhall-files:
     description: 'List of dhall files to check'
@@ -34,20 +37,25 @@ inputs:
     description: 'Enable verbose logging'
     default: ''
     required: false
+  lint:
+    description: 'Lint the dhall files'
+    default: ''
+    required: false
 
 runs:
   using: 'composite'
   steps:
-    - id: spelling
+    - shell: bash
       env:
         DHALL_HASKELL: ${{ inputs.dhall-haskell }}
+        DHALL_HASKELL_BINARY: ${{ inputs.dhall-haskell-binary }}
         DHALL_JSON: ${{ inputs.dhall-json }}
-        DHALL_BINARY: ${{ inputs.dhall-binary }}
+        DHALL_JSON_BINARY: ${{ inputs.dhall-json-binary }}
         FILES: ${{ inputs.dhall-files }}
         LIST: ${{ inputs.dhall-file-list }}
         PARALLEL_JOBS: ${{ inputs.parallel-jobs }}
         RETRY_FAILED_FILES: ${{ inputs.retry-failed-files }}
         VERBOSE: ${{ inputs.verbose }}
+        LINT: ${{ inputs.lint }}
       run:
         $GITHUB_ACTION_PATH/check.sh
-      shell: bash
