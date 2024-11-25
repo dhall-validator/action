@@ -24,6 +24,12 @@ fi
 if [ -n "$FILES" ]; then
   echo "$FILES" | tr "\n" "\0" >> "$LIST"
 fi
+
+if ! grep -q . "$LIST"; then
+  echo "::notice::No Dhall files to check."
+  exit 0
+fi
+
 if [ -z "$PARALLEL_JOBS" ]; then
   PARALLEL_JOBS=2
 fi
