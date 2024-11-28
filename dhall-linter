@@ -1,0 +1,9 @@
+#!/bin/sh
+baseline=$(mktemp)
+git status > "$baseline" || true
+dhall lint "$@"
+updated=$(mktemp)
+git status > "$updated" || true
+diff -u "$baseline" "$updated" || true
+echo
+git diff --exit-code -- "$@"
