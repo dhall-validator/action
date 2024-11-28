@@ -36,12 +36,11 @@ fi
 
 if [ -n "$LINT" ]; then
   echo "::group::lint"
-  if cat "$LIST" | xargs -0 dhall lint --check; then
-    echo '::notice::Linting passed.'
-  else
+  if ! cat "$LIST" | xargs -0 "$GITHUB_ACTION_PATH/dhall-linter"; then
     echo '::error::Linting failed. Use `dhall lint` locally to fix the errors.'
     exit 1
   fi
+  echo '::notice::Linting passed.'
   echo "::endgroup::"
 fi
 
