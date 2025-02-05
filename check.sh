@@ -1,4 +1,7 @@
 #!/bin/sh -e
+if [ -n "$VERBOSE" ]; then
+  set -x
+fi
 
 dhall_json="$(eval echo "$DHALL_JSON_BINARY")"
 dhall_haskell="$(eval echo "$DHALL_HASKELL_BINARY")"
