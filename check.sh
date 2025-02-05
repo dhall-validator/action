@@ -20,6 +20,30 @@ PATH="$dhall_haskell_extracted/bin:$PATH"
 
 echo "::add-matcher::$GITHUB_ACTION_PATH/dhall-checker.json"
 
+if [ -z "$XDG_CACHE_HOME" ]; then
+  export XDG_CACHE_HOME=/tmp/dhall-cache
+  mkdir -p "$XDG_CACHE_HOME"
+  echo "XDG_CACHE_HOME=$XDG_CACHE_HOME" >> "$GITHUB_ENV"
+fi
+
+if [ -n "$DHALL_CACHE_URL" ]; then
+  dhall_cache=$(mktemp)
+  curl -sSL "$DHALL_CACHE_URL" -o "$dhall_cache"
+  (
+    cd "$XDG_CACHE_HOME"
+    tar xf "$dhall_cache"
+    root_items="$(
+      tar tf "$dhall_cache" |
+      perl -pe 's!/.*!!' |
+      uniq
+    )"
+    if [ $(echo "$root_items" | wc -l) = 1 ] ; then
+      mv "$root_items"/* .
+      rmdir "$root_items"
+    fi
+  )
+fi
+
 export DHALL_FAILURES=$(mktemp -d)
 if [ -z "$LIST" ]; then
   export LIST=$(mktemp)

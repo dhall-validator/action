@@ -26,6 +26,9 @@ inputs:
   dhall-file-list:
     description: 'Null delimited file of dhall files to check'
     required: false
+  dhall-cache-url:
+    description: 'Dhall cache tarball'
+    required: false
   parallel-jobs:
     description: 'Number of CPUs available for running checks'
     required: false
@@ -47,6 +50,7 @@ runs:
   steps:
     - shell: bash
       env:
+        DHALL_CACHE_URL: ${{ inputs.dhall-cache-url }}
         DHALL_HASKELL: ${{ inputs.dhall-haskell }}
         DHALL_HASKELL_BINARY: ${{ inputs.dhall-haskell-binary }}
         DHALL_JSON: ${{ inputs.dhall-json }}
