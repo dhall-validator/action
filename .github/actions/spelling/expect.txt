@@ -3,4 +3,6 @@ endgroup
 jsoref
 Linting
 mktemp
+tarball
 workflows
+XDG
