@@ -1,5 +1,5 @@
 #!/bin/sh -e
-if [ -n "$VERBOSE" ]; then
+if [ -n "$VERBOSE" ] || [ "$GITHUB_RUN_ATTEMPT" != 1 ]; then
   set -x
 fi
 
