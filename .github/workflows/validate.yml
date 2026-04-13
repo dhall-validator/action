@@ -19,12 +19,12 @@ jobs:
     steps:
     - name: checkout-merge
       if: contains(github.event_name, 'pull_request')
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: refs/pull/${{github.event.pull_request.number}}/merge
     - name: checkout
       if: ${{ !contains(github.event_name, 'pull_request') }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ github.event.pull_request.head.sha }}
     - name: dhall-validator-files
@@ -45,12 +45,12 @@ jobs:
     steps:
     - name: checkout-merge
       if: contains(github.event_name, 'pull_request')
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: refs/pull/${{github.event.pull_request.number}}/merge
     - name: checkout
       if: ${{ !contains(github.event_name, 'pull_request') }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ github.event.pull_request.head.sha }}
     - name: dhall-validator-files
@@ -73,16 +73,16 @@ jobs:
     steps:
     - name: checkout-merge
       if: contains(github.event_name, 'pull_request')
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: refs/pull/${{github.event.pull_request.number}}/merge
     - name: checkout
       if: ${{ !contains(github.event_name, 'pull_request') }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ github.event.pull_request.head.sha }}
     - name: get tests
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: dhall-lang/dhall-lang
         path: dhall-lang
